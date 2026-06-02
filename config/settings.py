@@ -31,7 +31,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # Permitir el dominio de Railway y localhost
 ALLOWED_HOSTS = ['*'] # En producción puedes ser más específico
 CSRF_TRUSTED_ORIGINS = [
-    'https://playaiot-production.up.railway.app', # Sin el guion medio
+   'https://backend1-production-75db.up.railway.app', # Sin el guion medio
     'https://confident-insight-production.up.railway.app'
 ]
 
