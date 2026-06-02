@@ -32,7 +32,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*'] # En producción puedes ser más específico
 CSRF_TRUSTED_ORIGINS = [
    'https://backend1-production-75db.up.railway.app', # Sin el guion medio
-    'https://monitoreoiot.netlify.app/'
+    'https://monitoreoiot.netlify.app'
 ]
 
 # Application definition
@@ -132,7 +132,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # Agrega esta línea
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173",
-    "https://monitoreoiot.netlify.app/",
+    "https://monitoreoiot.netlify.app",
     "backend1-production-75db.up.railway.app"
 ]
 CORS_ALLOW_CREDENTIALS = True
