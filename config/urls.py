@@ -7,7 +7,11 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     path('admin/', grouped_admin_site.urls),
-    path('api/', include('core.urls')),
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    # Agrupamos todo lo que pertenezca a la API dentro del prefijo api/
+    path('api/', include([
+        path('', include('core.urls')), # Las URLs de tus sensores/dispositivos (ej: api/sensores/)
+        path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # Ahora sí: api/login/
+        path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # Ahora sí: api/token/refresh/
+    ])),
 ]
