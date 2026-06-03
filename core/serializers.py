@@ -70,21 +70,36 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
     
 class UsuarioSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=False, allow_blank=True)
+
     class Meta:
         model = Usuario
-        fields = ['idusuarios', 'nombre', 'apellido', 'username', 'password']
+        fields = ['idusuarios', 'nombre', 'apellido', 'username', 'password', 'email']
         extra_kwargs = {'password': {'write_only': True}} # Ocultar password en las consultas
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        from django.contrib.auth.models import User
+        try:
+            auth_user = User.objects.get(id=instance.idusuarios)
+            ret['email'] = auth_user.email
+        except User.DoesNotExist:
+            ret['email'] = ''
+        return ret
 
     def create(self, validated_data):
         from django.contrib.auth.models import User
         from django.contrib.auth.hashers import make_password
+        
+        email = validated_data.pop('email', '')
         
         # 1. Crear en la tabla de autenticación oficial (auth_user)
         auth_user = User.objects.create(
             username=validated_data['username'],
             password=make_password(validated_data['password']),
             first_name=validated_data.get('nombre', ''),
-            last_name=validated_data.get('apellido', '')
+            last_name=validated_data.get('apellido', ''),
+            email=email
         )
         
         # 2. Crear en la tabla personalizada con el mismo ID
@@ -101,6 +116,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         from django.contrib.auth.models import User
         from django.contrib.auth.hashers import make_password
         
+        email = validated_data.pop('email', None)
+        
         # Actualizar en la tabla personalizada
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.apellido = validated_data.get('apellido', instance.apellido)
@@ -115,6 +132,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
             auth_user.username = instance.username
             auth_user.first_name = instance.nombre
             auth_user.last_name = instance.apellido
+            if email is not None:
+                auth_user.email = email
             if 'password' in validated_data:
                 auth_user.password = make_password(validated_data['password'])
             auth_user.save()
@@ -124,7 +143,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
                 username=instance.username,
                 password=make_password(validated_data.get('password', 'default123')),
                 first_name=instance.nombre,
-                last_name=instance.apellido
+                last_name=instance.apellido,
+                email=email or ''
             )
             
         return instance
