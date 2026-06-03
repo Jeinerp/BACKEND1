@@ -277,3 +277,49 @@ class ESP32UploadView(APIView):
             "device": dispositivo.nombre,
             "processed": respuestas
         }, status=201)
+
+
+class RecuperarPasswordView(APIView):
+    """
+    Endpoint para restablecer la contraseña si el usuario y correo electrónico coinciden.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        new_password = request.data.get('new_password')
+
+        if not username or not email or not new_password:
+            return Response({"error": "Todos los campos son obligatorios"}, status=400)
+
+        from django.contrib.auth.models import User
+        from django.contrib.auth.hashers import make_password
+        from .models import Usuario
+
+        try:
+            # Buscar el usuario oficial
+            auth_user = User.objects.get(username=username, email=email)
+            
+            # Actualizar contraseña en django auth user
+            auth_user.password = make_password(new_password)
+            auth_user.save()
+
+            # Actualizar contraseña en nuestra tabla personalizada
+            try:
+                usuario = Usuario.objects.get(idusuarios=auth_user.id)
+                usuario.password = new_password
+                usuario.save()
+            except Usuario.DoesNotExist:
+                Usuario.objects.create(
+                    idusuarios=auth_user.id,
+                    nombre=auth_user.first_name,
+                    apellido=auth_user.last_name,
+                    username=auth_user.username,
+                    password=new_password
+                )
+
+            return Response({"message": "Contraseña restablecida exitosamente"}, status=200)
+
+        except User.DoesNotExist:
+            return Response({"error": "El usuario o correo electrónico no coinciden"}, status=400)
