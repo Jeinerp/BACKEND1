@@ -209,5 +209,30 @@ def populate():
         pass
     print("Roles configurados correctamente.")
 
+    # 7. Recursos (Menú)
+    print("Configurando recursos y permisos por defecto...")
+    recursos_data = [
+        ("Dashboard", "/dashboard", "layout-dashboard", 1),
+        ("Dispositivos", "/dispositivos", "cpu", 2),
+        ("Zonas", "/zonas", "map", 3),
+        ("Sensores", "/sensores", "thermometer", 4),
+        ("Lecturas", "/lecturas", "database", 5),
+        ("Alertas", "/alertas", "alert-triangle", 6),
+        ("Actuadores", "/actuadores", "radio", 7),
+        ("Usuarios y Roles", "/usuarios", "users", 10),
+        ("Auditoría", "/auditoria", "file-text", 11),
+    ]
+    
+    from core.models import RecursoHasRol
+    for nom, path, ico, ord in recursos_data:
+        rec, _ = Recurso.objects.get_or_create(
+            nombre=nom, 
+            defaults={"path": path, "icono": ico, "orden": ord, "estado": "activo"}
+        )
+        RecursoHasRol.objects.get_or_create(rol_idrol=admin_rol, recurso_idrecursos=rec)
+        if ord < 8:
+            RecursoHasRol.objects.get_or_create(rol_idrol=user_rol, recurso_idrecursos=rec)
+    print("Recursos configurados correctamente.")
+
 if __name__ == '__main__':
     populate()
