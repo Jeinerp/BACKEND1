@@ -31,10 +31,15 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # Permitir el dominio de Railway y localhost
 ALLOWED_HOSTS = ['*'] # En producción puedes ser más específico
 CSRF_TRUSTED_ORIGINS = [
+
     'https://backend1-production-75db.up.railway.app',
     'https://monitoreoiot.netlify.app',
     'https://playaiot-production.up.railway.app', # Sin el guion medio
     'https://confident-insight-production.up.railway.app'
+
+   'https://backend1-production-75db.up.railway.app', # Sin el guion medio
+    'https://monitoreoiot.netlify.app'
+
 ]
 
 # Application definition
@@ -135,8 +140,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173",
     "https://monitoreoiot.netlify.app",
+
     "https://confident-insight-production.up.railway.app",
     "https://playaiot-production.up.railway.app"
+
+    "backend1-production-75db.up.railway.app"
+
 ]
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE = 'None'
