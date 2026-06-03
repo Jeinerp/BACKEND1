@@ -272,11 +272,60 @@ class ESP32UploadView(APIView):
                 "lectura_id": lectura.id_lectura
             })
 
-        return Response({
+        # Procesar respuesta de comando si la envía el ESP32
+        respuesta_data = request.data.get('respuesta_comando')
+        if respuesta_data:
+            id_comando = respuesta_data.get('id_comando')
+            codigo = respuesta_data.get('codigo_respuesta', 'OK')
+            msg = respuesta_data.get('mensaje', '')
+            exito = respuesta_data.get('exitoso', True)
+            try:
+                comando = ComandoRemoto.objects.get(id_comando=id_comando)
+                # Registrar la respuesta
+                RespuestaComando.objects.create(
+                    id_comando=comando,
+                    codigo_respuesta=codigo,
+                    mensaje=msg,
+                    exitoso=exito
+                )
+                
+                # Si el comando era cambiar estado del buzzer, reflejarlo en el modelo Buzzer
+                if comando.tipo_comando == "BUZZER":
+                    state = comando.payload.get("state", "APAGADO")
+                    buzzer = Buzzer.objects.filter(id_dispositivo=dispositivo).first()
+                    if buzzer:
+                        buzzer.estado = state
+                        buzzer.save()
+                        EstadoBuzzer.objects.create(
+                            id_buzzer=buzzer,
+                            estado="ACTIVO" if state == "ENCENDIDO" else "INACTIVO",
+                            motivo_variacion="Comando remoto ejecutado por ESP32",
+                            activador_por="MANUAL"
+                        )
+            except Exception as e:
+                print(f"Error procesando respuesta de comando: {e}", flush=True)
+
+        # Buscar comandos pendientes para este dispositivo (que no tengan respuesta registrada)
+        comando_pendiente = ComandoRemoto.objects.filter(
+            id_dispositivo=dispositivo
+        ).exclude(
+            respuestacomando__isnull=False
+        ).order_by('fecha_creacion').first()
+
+        response_payload = {
             "status": "success",
             "device": dispositivo.nombre,
             "processed": respuestas
-        }, status=201)
+        }
+
+        if comando_pendiente:
+            response_payload["comando"] = {
+                "id_comando": comando_pendiente.id_comando,
+                "tipo_comando": comando_pendiente.tipo_comando,
+                "payload": comando_pendiente.payload
+            }
+
+        return Response(response_payload, status=201)
 
 
 class RecuperarPasswordView(APIView):
